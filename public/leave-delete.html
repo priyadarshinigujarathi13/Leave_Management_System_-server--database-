@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delete Leave | Priya Darshini</title>
+    <link rel="stylesheet" href="leave-style.css">
+</head>
+<body>
+<header class="topbar">
+    <nav class="nav">
+        <a class="brand" href="leave-home.html">PRIYA DARSHINI
+            <small>EMPLOYEE LEAVE MANAGEMENT SYSTEM</small>
+        </a>
+        <div class="nav-links">
+            <a href="leave-home.html">Home</a>
+            <a href="leave-insert.html">Apply Leave</a>
+            <a href="leave-list.html">All Records</a>
+            <a href="leave-search.html">Search</a>
+            <a href="leave-update.html">Update</a>
+            <a class="active" href="leave-delete.html">Delete</a>
+        </div>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="form-card">
+        <span class="eyebrow">REMOVE A RECORD</span>
+        <h1>Delete Leave Record</h1>
+        <p>Select the Employee ID you want to delete.</p>
+
+        <form id="deleteForm">
+            <label for="employeeId">Employee ID</label>
+            <select id="employeeId" required>
+                <option value="">Loading Employee IDs...</option>
+            </select>
+
+            <button class="btn btn-light" type="submit">Delete Record</button>
+        </form>
+
+        <p id="message" role="status"></p>
+    </section>
+</main>
+
+<footer class="footer">© 2026 Priya Darshini · Employee Leave Management System</footer>
+
+<script>
+const employeeSelect = document.getElementById("employeeId");
+const message = document.getElementById("message");
+
+async function loadEmployeeIds() {
+    try {
+        const response = await fetch("/employee-ids");
+        if (!response.ok) throw new Error();
+
+        const ids = await response.json();
+        employeeSelect.innerHTML =
+            '<option value="">Select Employee ID</option>';
+
+        ids.forEach(id => {
+            const option = document.createElement("option");
+            option.value = id;
+            option.textContent = id;
+            employeeSelect.appendChild(option);
+        });
+
+        if (ids.length === 0) {
+            message.textContent = "No records available to delete.";
+        }
+    } catch {
+        employeeSelect.innerHTML =
+            '<option value="">Unable to load IDs</option>';
+        message.textContent = "Could not load Employee IDs.";
+    }
+}
+
+document.getElementById("deleteForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const id = employeeSelect.value;
+    if (!id) {
+        message.textContent = "Please select an Employee ID.";
+        return;
+    }
+
+    if (!confirm("Are you sure you want to delete Employee ID " + id + "?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch("/leaves/" + encodeURIComponent(id), {
+            method: "DELETE"
+        });
+        const result = await response.json();
+        message.textContent = result.message || "Request completed.";
+
+        if (response.ok) {
+            await loadEmployeeIds();
+        }
+    } catch {
+        message.textContent = "Server connection failed.";
+    }
+});
+
+loadEmployeeIds();
+</script>
+</body>
+</html>
